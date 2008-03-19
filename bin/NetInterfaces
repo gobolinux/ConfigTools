@@ -1,0 +1,14 @@
+#!/bin/bash
+for i in `seq 0 9`;
+do
+    ifconfig eth${i} &> /dev/null && echo eth${i}
+done
+for i in `seq 0 9`;
+do
+    ifconfig ath${i} &> /dev/null && echo eth${i}
+done
+for i in `seq 0 9`;
+do
+    ifconfig wlan${i} &> /dev/null && echo eth${i}
+done
+
