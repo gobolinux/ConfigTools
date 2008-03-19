@@ -1,14 +1,8 @@
 #!/bin/bash
-for i in `seq 0 9`;
+for interfacename in eth ath wlan
 do
-    ifconfig eth${i} &> /dev/null && echo eth${i}
+   for i in `seq 0 5`;
+   do
+      ifconfig ${interfacename}${i} &> /dev/null && echo ${interfacename}${i}
+   done
 done
-for i in `seq 0 9`;
-do
-    ifconfig ath${i} &> /dev/null && echo eth${i}
-done
-for i in `seq 0 9`;
-do
-    ifconfig wlan${i} &> /dev/null && echo eth${i}
-done
-
