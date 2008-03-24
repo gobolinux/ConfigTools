@@ -1,8 +1,8 @@
 #!/bin/bash
-for interfacename in eth ath wlan
+source ScriptFunctions
+
+# the sed regex first removes comments and empty lines, then find the NAME property and returns the value
+for interfacename in $(sed -r '/^[\ \t]*#.*/d;/^[\ \t]*$/d;s,.*NAME="([^"]*)".*,\1,g' "${goboSettings}"/udev/rules.d/70-persistent-net.rules)
 do
-   for i in `seq 0 5`;
-   do
-      ifconfig ${interfacename}${i} &> /dev/null && echo ${interfacename}${i}
-   done
+   ifconfig ${interfacename} &> /dev/null && echo ${interfacename}
 done
