@@ -1,8 +1,8 @@
 #!/bin/bash
 source ScriptFunctions
 
-# the sed regex first removes comments and empty lines, then find the NAME property and returns the value
-for interfacename in $(sed -r '/^[\ \t]*#.*/d;/^[\ \t]*$/d;s,.*NAME="([^"]*)".*,\1,g' "${goboSettings}"/udev/rules.d/70-persistent-net.rules)
+# Look for available network interfaces in /sys/class, ignore lo
+for interfacename in $(ls /sys/class/net |grep -v lo)
 do
    ifconfig ${interfacename} &> /dev/null && echo ${interfacename}
 done
