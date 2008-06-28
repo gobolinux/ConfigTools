@@ -116,13 +116,33 @@ def generateGrubMenuFile(bootloaderTarget, targetPartition, keymap = '', genGrap
 	cmd = 'fdisk -l'
 	lines = os.popen(cmd).readlines()
 
-	lines = filter(lambda x:x.find('FAT') > -1 or x.find('NTFS') > -1,lines)
-
-	bootableWindowsPartitions = []
+	bootableOtherOsPartitions = []
+	bootableOtherOsNames = []
 	for line in lines :
 		l = line.split()
 		if len(l) > 1 and l[1] == '*' :
-			bootableWindowsPartitions.append(devToGrub(l[0]))
+			
+			if line.find('FAT') > -1 or line.find('NTFS') > -1:
+				osName = 'Microsoft Windows'
+			
+			elif line.find('AIX') > -1:
+				osName = 'AIX'
+			
+			elif line.find('QNX') > -1 :
+				osName = 'QNX'
+			
+			elif line.find('Darwin') > -1 :
+				osName = 'Darwin'
+			
+			elif line.find('BSD') > -1 :
+				osName = 'BSD'
+					
+			else:
+				osName = 'Other OS'
+			
+			bootableOtherOsPartitions.append(devToGrub(l[0]))
+			bootableOtherOsNames.append(osName)
+				
 
 	grubFormatTarget = devToGrub('/dev/'+targetPartition)
 	if (bootloaderTarget == targetPartition) or (bootloaderTarget == targetPartition[0:3]) :
@@ -155,9 +175,9 @@ def generateGrubMenuFile(bootloaderTarget, targetPartition, keymap = '', genGrap
 	o += 'title '+tr('GoboLinux - Framebuffer Console') + '\n'
 	o += 'kernel %s/System/Kernel/Boot/kernel vt.default_utf8=0 vga=791 root=/dev/%s'%(grubFormatTarget,targetPartition) + '\n'
 	
-	for partition in bootableWindowsPartitions:
+	for partition, name in zip(bootableOtherOsPartitions, bootableOtherOsNames):
 		o += '\n'
-		o += 'title Other OS at %s'%partition + '\n'
+		o += 'title %s at %s'%(name, partition) + '\n'
 		if not re.match('...0...',partition) :
 			o += 'map %s %s'%(re.sub(',[0-9]\)',')',partition),re.sub('[0-9],[0-9]\)','0)',partition)) + '\n'
 		o += 'rootnoverify %s'%partition + '\n'
