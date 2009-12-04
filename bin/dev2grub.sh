@@ -4,7 +4,11 @@
 
 host_os=linux
 device_map=/System/Kernel/Boot/grub/device.map
-[ -e "$device_map" ] || echo quit | grub --device-map "$device_map" --batch > /dev/null
+entries=`wc -l $device_map | awk {'print $1'}`
+if [ ! -e "$device_map" ] || [ $entries = 0 ]
+then
+	grub-mkdevicemap --device-map="$device_map"
+fi
 
 
 # Function pasted directly from grub-0.97/util/grub-install.in
