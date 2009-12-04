@@ -76,13 +76,13 @@ convert () {
 	# GRUB's syntax.
 	case "$host_os" in
 	linux*)
-	    echo "$tmp_drive" | sed "s%)$%,`expr $tmp_part - 1`)%" ;;
+	    echo "$tmp_drive" | sed "s%)$%,$tmp_part)%" ;;
 	gnu*)
 	    if echo $tmp_part | grep "^s" >/dev/null; then
 		tmp_pc_slice=`echo $tmp_part \
 		    | sed "s%s\([0-9]*\)[a-g]*$%\1%"`
 		tmp_drive=`echo "$tmp_drive" \
-		    | sed "s%)%,\`expr "$tmp_pc_slice" - 1\`)%"`
+		    | sed "s%)%,$tmp_pc_slice)%"`
 	    fi
 	    if echo $tmp_part | grep "[a-g]$" >/dev/null; then
 		tmp_bsd_partition=`echo "$tmp_part" \
@@ -96,7 +96,7 @@ convert () {
 		tmp_pc_slice=`echo $tmp_part \
 		    | sed "s%s\([0-9]*\)[a-h]*$%\1%"`
 		tmp_drive=`echo "$tmp_drive" \
-		    | sed "s%)%,\`expr "$tmp_pc_slice" - 1\`)%"`
+		    | sed "s%)%,$tmp_pc_slice)%"`
 	    fi
 	    if echo $tmp_part | grep "[a-h]$" >/dev/null; then
 		tmp_bsd_partition=`echo "$tmp_part" \
