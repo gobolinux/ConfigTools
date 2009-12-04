@@ -116,11 +116,21 @@ def generateGrubMenuFile(bootloaderTarget, targetPartition, keymap = '', genGrap
 	cmd = 'fdisk -l'
 	lines = os.popen(cmd).readlines()
 
+	swapPartition = getSwapPartition()
+
+	grubFormatTarget = devToGrub('/dev/'+targetPartition)
+	if (bootloaderTarget == targetPartition) or (bootloaderTarget == targetPartition[0:3]) :
+		grubFormatTarget = re.sub('[1-9],','0,', grubFormatTarget)
+
 	bootableOtherOsPartitions = []
 	bootableOtherOsNames = []
 	for line in lines :
 		l = line.split()
 		if len(l) > 1 and l[1] == '*' :
+
+			osPartition=devToGrub(l[0])
+			if osPartition == grubFormatTarget :
+				continue
 			
 			if line.find('FAT') > -1 or line.find('NTFS') > -1:
 				osName = 'Microsoft Windows'
@@ -140,49 +150,46 @@ def generateGrubMenuFile(bootloaderTarget, targetPartition, keymap = '', genGrap
 			else:
 				osName = 'Other OS'
 			
-			bootableOtherOsPartitions.append(devToGrub(l[0]))
-			bootableOtherOsNames.append(osName)
-				
-
-	grubFormatTarget = devToGrub('/dev/'+targetPartition)
-	if (bootloaderTarget == targetPartition) or (bootloaderTarget == targetPartition[0:3]) :
-		grubFormatTarget = re.sub('[1-9],','0,', grubFormatTarget)
-
-	swapPartition = getSwapPartition()
+			bootableOtherOsPartitions.append(osPartition)
+			bootableOtherOsNames.append(osName)			
 
 	o = ''
 	if keymap == 'dvorak' :
 		o += dvorak_keymap
 
 	o += '\n'
-	o += 'default 0' + '\n'
+	o += 'set default=0' + '\n'
 	
-	o += '#timeout 5' + '\n'
+	o += '#set timeout=5' + '\n'
 	
 	#if installer.getValue('EnableGraphicGRUB') :
 	#o += 'gfxmenu %s/System/Kernel/Boot/grub/message'%grubFormatTarget + '\n'
 
 	if genGraphicDesktop :
 		o += '\n'
-		o += 'title '+tr('GoboLinux - Graphic Desktop') + '\n'
-		o += 'kernel %s/System/Kernel/Boot/kernel vt.default_utf8=0 vga=0 root=/dev/%s Boot=Graphic'%(grubFormatTarget,targetPartition) + '\n'
+		o += 'menuentry \"'+tr('GoboLinux - Graphic Desktop') + '\" {\n'
+		o += '    set root=%s' %(grubFormatTarget) + '\n'
+		o += '    linux %s/System/Kernel/Boot/kernel vt.default_utf8=0 vga=0 root=/dev/%s Boot=Graphic'%(grubFormatTarget,targetPartition) + '\n'
+		o += '}\n'
 
 	o += '\n'
-	o += 'title '+tr('GoboLinux - Console') + '\n'
-	o += 'kernel %s/System/Kernel/Boot/kernel vt.default_utf8=0 vga=0 root=/dev/%s'%(grubFormatTarget,targetPartition) + '\n'
+	o += 'menuentry \"'+tr('GoboLinux - Console') + '\" {\n'
+	o += '    set root=%s' %(grubFormatTarget) + '\n'
+	o += '    linux %s/System/Kernel/Boot/kernel vt.default_utf8=0 vga=0 root=/dev/%s'%(grubFormatTarget,targetPartition) + '\n'
+	o += '}\n'
 
 	o += '\n'
-	o += 'title '+tr('GoboLinux - Framebuffer Console') + '\n'
-	o += 'kernel %s/System/Kernel/Boot/kernel vt.default_utf8=0 vga=791 root=/dev/%s'%(grubFormatTarget,targetPartition) + '\n'
+	o += 'menuentry \"'+tr('GoboLinux - Framebuffer Console') + '\" {\n'
+	o += '    set root=%s' %(grubFormatTarget) + '\n'
+	o += '    linux %s/System/Kernel/Boot/kernel vt.default_utf8=0 vga=791 root=/dev/%s'%(grubFormatTarget,targetPartition) + '\n'
+	o += '}\n'
 	
 	for partition, name in zip(bootableOtherOsPartitions, bootableOtherOsNames):
 		o += '\n'
-		o += 'title %s at %s'%(name, partition) + '\n'
-		if not re.match('...0...',partition) :
-			o += 'map %s %s'%(re.sub(',[0-9]\)',')',partition),re.sub('[0-9],[0-9]\)','0)',partition)) + '\n'
-		o += 'rootnoverify %s'%partition + '\n'
-		o += 'makeactive' + '\n'
-		o += 'chainloader +1' + '\n'
+		o += 'menuentry \"%s at %s'%(name, partition) + '\" {\n'
+		o += '    set root=%s' %(partition) + '\n'
+		o += '    chainloader +1' + '\n'
+		o += '}\n'
 
 	return o
 
