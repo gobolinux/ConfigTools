@@ -58,6 +58,10 @@ echo "# Sys filesystem."
 echo "none /System/Kernel/Objects sysfs defaults 0 0"
 echo
 
+echo "# Config filesystem."
+echo "none /System/Kernel/Config configfs defaults 0 0"
+echo
+
 echo "# Pts filesystem."
 echo "none /System/Kernel/Devices/pts devpts defaults 0 0"
 echo
