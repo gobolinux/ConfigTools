@@ -169,19 +169,19 @@ def generateGrubMenuFile(bootloaderTarget, targetPartition, keymap = '', genGrap
 		o += '\n'
 		o += 'menuentry \"'+tr('GoboLinux - Graphic Desktop') + '\" {\n'
 		o += '    set root=%s' %(grubFormatTarget) + '\n'
-		o += '    linux %s/System/Kernel/Boot/kernel vt.default_utf8=0 vga=0 root=/dev/%s Boot=Graphic'%(grubFormatTarget,targetPartition) + '\n'
+		o += '    linux %s/System/Kernel/Boot/kernel vt.default_utf8=0 gfxpayload=1024x768x24 root=/dev/%s Boot=Graphic'%(grubFormatTarget,targetPartition) + '\n'
 		o += '}\n'
 
 	o += '\n'
 	o += 'menuentry \"'+tr('GoboLinux - Console') + '\" {\n'
 	o += '    set root=%s' %(grubFormatTarget) + '\n'
-	o += '    linux %s/System/Kernel/Boot/kernel vt.default_utf8=0 vga=0 root=/dev/%s'%(grubFormatTarget,targetPartition) + '\n'
+	o += '    linux %s/System/Kernel/Boot/kernel vt.default_utf8=0 gfxpayload=text root=/dev/%s'%(grubFormatTarget,targetPartition) + '\n'
 	o += '}\n'
 
 	o += '\n'
 	o += 'menuentry \"'+tr('GoboLinux - Framebuffer Console') + '\" {\n'
 	o += '    set root=%s' %(grubFormatTarget) + '\n'
-	o += '    linux %s/System/Kernel/Boot/kernel vt.default_utf8=0 vga=791 root=/dev/%s'%(grubFormatTarget,targetPartition) + '\n'
+	o += '    linux %s/System/Kernel/Boot/kernel vt.default_utf8=0 gfxpayload=1024x768x24 root=/dev/%s'%(grubFormatTarget,targetPartition) + '\n'
 	o += '}\n'
 	
 	for partition, name in zip(bootableOtherOsPartitions, bootableOtherOsNames):
