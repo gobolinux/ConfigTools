@@ -2,7 +2,7 @@
 source ScriptFunctions
 
 # Look for available network interfaces in /sys/class, ignore lo
-for interfacename in $(ls /sys/class/net |grep -v lo)
+for interfacename in $(ls /sys/class/net 2> /dev/null | grep -v lo)
 do
    ifconfig ${interfacename} &> /dev/null && echo ${interfacename}
 done
