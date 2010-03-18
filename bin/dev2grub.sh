@@ -4,9 +4,10 @@
 
 host_os=linux
 device_map=/System/Kernel/Boot/grub/device.map
-entries=`wc -l $device_map | awk {'print $1'}`
+entries=$(wc -l $device_map 2> /dev/null | awk {'print $1'})
 if [ ! -e "$device_map" ] || [ $entries = 0 ]
 then
+	mkdir -p $(dirname $device_map)
 	grub-mkdevicemap --device-map="$device_map"
 fi
 
