@@ -11,6 +11,15 @@ then
 	grub-mkdevicemap --device-map="$device_map"
 fi
 
+device_map_new=`mktemp`
+cat "$device_map" | while read line
+do
+	dev=`echo "$line" | awk {'print $1'}`
+	name=`echo "$line" | awk {'print $2'}`
+	newname=`readlink -f "$name" | sed 's,/System/Kernel/Devices,/dev,g'`
+	echo "$dev    $newname" >> "$device_map_new"
+done
+mv "$device_map_new" "$device_map"
 
 # Function pasted directly from grub-0.97/util/grub-install.in
 
