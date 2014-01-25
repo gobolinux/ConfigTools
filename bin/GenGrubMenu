@@ -135,12 +135,12 @@ class GrubConfig :
 
 	def genBootablePartitionsList(self) :
 		swapPartition = DeviceHandler().getSwapPartition()
-		self.grubFormatTarget = DeviceHandler("/dev/" + self.targetPartition).grubName()
+		self.grubFormatTarget = DeviceHandler().grubName("/dev/" + self.targetPartition)
 		if (bootloaderTarget == targetPartition) or (bootloaderTarget == targetPartition[0:3]) :
 			self.grubFormatTarget = re.sub('[1-9],','0,', self.grubFormatTarget)
 
 		for partition in DeviceHandler().getPartitionTable() :
-			osPartition = DeviceHandler(partition[0]).grubName()
+			osPartition = DeviceHandler().grubName(partition[0])
 			partitionType = partition[1].lower()
 			partitionFlags = partition[2]
 
