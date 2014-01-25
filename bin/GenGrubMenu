@@ -94,11 +94,8 @@ def tr(s) :
 
 
 class DeviceHandler :
-	def __init__(self, device="") :
-		self.device = device
-
-	def grubName(self) :
-		grub_dev = os.popen("dev2grub.sh " + self.device.replace("/System/Kernel/Devices", "/dev"))
+	def grubName(self, device="") :
+		grub_dev = os.popen("dev2grub.sh " + device.replace("/System/Kernel/Devices", "/dev"))
 		return grub_dev.readline().strip()
 
 	def getPartitionTable(self) :
