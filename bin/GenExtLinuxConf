@@ -105,13 +105,13 @@ class ExtLinuxConf :
 		o += 'LABEL gobo015\n'
 		o += '  MENU LABEL GoboLinux 015\n'
 		o += '  LINUX /System/Kernel/Boot/kernel\n'
-		o += '  APPEND root=/dev/%s vt.default_utf8=0 gfxpayload=1024x768x24 Boot=Graphic\n' %self.targetPartition
+		o += '  APPEND root=/dev/%s vt.default_utf8=1 gfxpayload=1024x768x24 Boot=Graphic\n' %self.targetPartition
 
 		o += '\n'
 		o += 'LABEL gobo015_text\n'
 		o += '  MENU LABEL GoboLinux 015 (text mode)\n'
 		o += '  LINUX /System/Kernel/Boot/kernel\n'
-		o += '  APPEND root=/dev/%s vt.default_utf8=0 gfxpayload=text\n' %self.targetPartition
+		o += '  APPEND root=/dev/%s vt.default_utf8=1 gfxpayload=text\n' %self.targetPartition
 
 		for partition, name in zip(self.bootableOtherOsPartitions, self.bootableOtherOsNames):
 			biosDisk, biosPartition = DeviceHandler().biosId(partition)
