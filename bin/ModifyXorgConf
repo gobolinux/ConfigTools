@@ -49,10 +49,10 @@ EOF
   mv ${tempfile}.tmp ${tempfile}
 }
 
-apply_sed "s%/Programs/.*/lib/xorg/modules%/System/Links/Libraries/xorg/modules%"
-apply_sed "s%/Programs/.*/share/X11/rgb%/System/Links/Shared/X11/rgb%"
-apply_sed "s%/Programs/.*/fonts%/Files/Fonts%"
-apply_sed "s%/Files/Fonts/misc%/Files/Fonts/Misc%"
+apply_sed "s%/Programs/.*/lib/xorg/modules%/System/Index/lib/xorg/modules%"
+apply_sed "s%/Programs/.*/share/X11/rgb%/System/Index/share/X11/rgb%"
+apply_sed "s%/Programs/.*/fonts%/Data/Fonts%"
+apply_sed "s%/Data/Fonts/misc%/Data/Fonts/Misc%"
 
 if Quiet grep '"Protocol".*"auto"' ${tempfile}
 then
