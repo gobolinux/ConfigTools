@@ -1,0 +1,41 @@
+#!/bin/bash
+
+if [ $# -lt 1 ]
+then
+	echo "Syntax: $0 <grubDir> [<oldUUID> <newUUID>]"
+	exit 1
+fi
+
+export GRUB_DISTRIBUTOR="GoboLinux"
+GRUB_DIR="$1"
+shift
+
+OLD_UUID=
+NEW_UUID=
+if [ ! -z "$1" -a ! -z "$2" ]
+then
+    OLD_UUID="$1"
+    NEW_UUID="$2"
+fi
+
+# Create the config file
+if [ ! -d "$GRUB_DIR" ]
+then
+    mkdir -p "$GRUB_DIR"
+fi
+grub-mkconfig -o "$GRUB_DIR/grub.cfg"
+
+# Make sure old UUID is no longer present in the cfg file
+if [ "x$OLD_UUID" != "x$NEW_UUID" ]
+then
+    GrepReplace -B "$OLD_UUID" "$NEW_UUID" "$GRUB_DIR/grub.cfg"
+fi
+
+# The kernel doesn't know about /System/Kernel/Devices
+GrepReplace -B /System/Kernel/Devices /dev "$GRUB_DIR/grub.cfg"
+
+# Make the OS string prettier
+GrepReplace -B "GoboLinux GNU/Linux" "GoboLinux" "$GRUB_DIR/grub.cfg"
+
+# Make console UTF-8
+sed -i 's,\(\tlinux.*Gobo.*\),\1 vt.default_utf8=1,g' "$GRUB_DIR/grub.cfg"
