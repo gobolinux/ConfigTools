@@ -39,3 +39,34 @@ GrepReplace -B "GoboLinux GNU/Linux" "GoboLinux" "$GRUB_DIR/grub.cfg"
 
 # Make console UTF-8
 sed -i 's,\(\tlinux.*Gobo.*\),\1 vt.default_utf8=1,g' "$GRUB_DIR/grub.cfg"
+
+# Enable output on all connected monitors
+sed -i 's,default_utf8=1,default_utf8=1 video=LVDS-1:e video=HDMI-1:e video=VGA=1:e,1' "$GRUB_DIR/grub.cfg"
+
+# Quiet output
+sed -i 's,default_utf8=1,default_utf8=1 console=/dev/null,1' "$GRUB_DIR/grub.cfg"
+
+# Print a fancy message
+sed -i "s,\(.*default_utf8=1.*\),\
+\t\techo	\n\
+\t\techo	\n\
+\t\techo	\n\
+\t\techo	\n\
+\t\techo	\n\
+\t\techo	\n\
+\t\techo	\n\
+\t\techo	\n\
+\t\techo	\n\
+\t\techo	\n\
+\t\techo	\n\
+\t\techo	'                   s t a r t i n g   G o b o L i n u x . . .                   '\n\
+\t\techo	\n\
+\t\techo	\n\
+\t\techo	\n\
+\t\techo	\n\
+\t\techo	\n\
+\t\techo	\n\
+\t\techo	\n\
+\t\techo	\n\
+\t\techo    \n\
+\1," "$GRUB_DIR/grub.cfg"
