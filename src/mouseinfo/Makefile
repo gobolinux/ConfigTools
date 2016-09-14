@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -I.
+CFLAGS=-I.
 
 all: mouseinfo
 
