@@ -102,14 +102,14 @@ class ExtLinuxConf :
 		o += 'MENU CLEAR\n'
 
 		o += '\n'
-		o += 'LABEL gobo015\n'
-		o += '  MENU LABEL GoboLinux 015\n'
+		o += 'LABEL gobo016\n'
+		o += '  MENU LABEL GoboLinux 016\n'
 		o += '  LINUX /System/Kernel/Boot/kernel\n'
 		o += '  APPEND root=/dev/%s vt.default_utf8=1 gfxpayload=1024x768x24 Boot=Graphic\n' %self.targetPartition
 
 		o += '\n'
-		o += 'LABEL gobo015_text\n'
-		o += '  MENU LABEL GoboLinux 015 (text mode)\n'
+		o += 'LABEL gobo016_text\n'
+		o += '  MENU LABEL GoboLinux 016 (text mode)\n'
 		o += '  LINUX /System/Kernel/Boot/kernel\n'
 		o += '  APPEND root=/dev/%s vt.default_utf8=1 gfxpayload=text\n' %self.targetPartition
 
