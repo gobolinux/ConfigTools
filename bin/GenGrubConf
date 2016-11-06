@@ -46,6 +46,9 @@ sed -i 's,default_utf8=1,default_utf8=1 video=LVDS-1:e video=HDMI-1:e video=VGA=
 # Quiet output
 sed -i 's,default_utf8=1,default_utf8=1 console=/dev/null,1' "$GRUB_DIR/grub.cfg"
 
+# Limit number of ramdisks, override Apple HID driver default settings
+sed -i 's,console=/dev/null,console=/dev/null brd.rd_nr=0 hid_apple.iso_layout=0 hid_apple.fnmode=2,1' "$GRUB_DIR/grub.cfg"
+
 # Print a fancy message
 sed -i "s,\(.*default_utf8=1.*\),\
 \t\techo	\n\
