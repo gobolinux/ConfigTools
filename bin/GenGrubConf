@@ -36,7 +36,8 @@ GrepReplace -B /System/Kernel/Devices /dev "$GRUB_DIR/grub.cfg"
 
 # Make the OS string prettier
 GrepReplace -B "GoboLinux GNU/Linux" "GoboLinux" "$GRUB_DIR/grub.cfg"
-GrepReplace -B "Advanced options for GoboLinux" "GoboLinux with VESA framebuffer driver" "$GRUB_DIR/grub.cfg"
+GrepReplace -B "GoboLinux, with Linux[^\'\(]*" "GoboLinux with VESA framebuffer driver" "$GRUB_DIR/grub.cfg"
+GrepReplace -B "driver(" "driver (" "$GRUB_DIR/grub.cfg"
 
 # All options: Make console UTF-8
 sed -i 's,\(\tlinux.*Gobo.*\),\1 vt.default_utf8=1,g' "$GRUB_DIR/grub.cfg"
@@ -45,10 +46,10 @@ sed -i 's,\(\tlinux.*Gobo.*\),\1 vt.default_utf8=1,g' "$GRUB_DIR/grub.cfg"
 sed -i 's,vt.default_utf8=1,vt.default_utf8=1 brd.rd_nr=0 hid_apple.iso_layout=0 hid_apple.fnmode=2,g' "$GRUB_DIR/grub.cfg"
 
 # First option: Enable output on all connected monitors, disable vesafb
-sed -i 's,default_utf8=1,default_utf8=1 video=LVDS-1:e video=HDMI-1:e video=VGA=1:e video=vesafb:off,1' "$GRUB_DIR/grub.cfg"
+sed -i -e '0,/default_utf8=1/s@default_utf8=1@default_utf8=1 video=LVDS-1:e video=HDMI-1:e video=VGA=1:e video=vesafb:off@' "$GRUB_DIR/grub.cfg"
 
 # First option: Quiet output
-sed -i 's,default_utf8=1,default_utf8=1 console=/dev/null,1' "$GRUB_DIR/grub.cfg"
+sed -i -e '0,/default_utf8=1/s@default_utf8=1@default_utf8=1 console=/dev/null@' "$GRUB_DIR/grub.cfg"
 
 # Print a fancy message
 sed -i "s,\(.*default_utf8=1.*\),\
