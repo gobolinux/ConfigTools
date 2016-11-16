@@ -1,68 +1,269 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Quick and dirty keyboard configurator for ~/.xinitrc
+# loadkeys to setxkbmap helper
+#
+# Given a keyboard.map file, finds an associated Xorg keyboard model,
+# layout, and variant, and writes it down to the user's .xinitrc file.
+#
+# Written by Lucas C. Villa Real <lucasvr@gobolinux.org>
+#
+# Released under the GNU GPL version 2 or above
 
 import os
-
-if len(os.sys.argv) != 2 :
-	print "Syntax: %s <KeymapLayout>" %os.sys.argv[0]
-	os.sys.exit(1)
-
-KeymapLayout = os.sys.argv[1]
-
-xinitrc = os.getenv("HOME") + "/.xinitrc"
-if not os.path.exists(xinitrc) :
-	print "Error: %s does not exist." %xinitrc
-	os.sys.exit(1)
+import sys
+import libxml2
+import subprocess
 
 
-def getKeyboardSettings() :
-	XkbModel = "default"
-	XkbLayout = "us"
-	XkbVariant = "basic"
-	if KeymapLayout == "be-latin1" :
-		XkbModel = "pc104"
-		XkbLayout = "be"
-	elif KeymapLayout == "br-abnt2" :
-		XkbModel = "abnt2"
-		XkbLayout = "br"
-	elif KeymapLayout == "br-abnt" :
-		XkbModel = "abnt"
-		XkbLayout = "br"
-	elif KeymapLayout == "fr-latin9" :
-		XkbModel = "pc105"
-		XkbVariant = "latin9"
-		XkbLayout = "fr"
-	elif KeymapLayout == "us-acentos" :
-		XkbModel = "pc105"
-		XkbLayout = "us_intl"
-	elif KeymapLayout == "sv-latin1" :
-		XkbModel = "pc105"
-		XkbLayout = "se"
-	elif KeymapLayout == "us" :
-		XkbModel = "pc104"
-		XkbLayout = "us"
-	elif KeymapLayout == "dvorak" :
-		XkbModel = "pc105"
-		XkbLayout = "dvorak"
-	else :
-		XkbModel = "pc104"
-		XkbLayout = KeymapLayout
-	return XkbModel, XkbLayout, XkbVariant
+class KeyboardSettings:
+	def __init__(self, keymap=None, x11_layout=None, x11_variant=None):
+		self.keymap = keymap
+		self.x11_model = "pc104"
+		self.x11_layout = "us" if x11_layout is None else x11_layout
+		self.x11_variant = x11_variant
+
+		if keymap == "be-latin1" :
+			self.x11_model = "pc104"
+			self.x11_layout = "be"
+		elif keymap == "br-abnt2" :
+			self.x11_model = "abnt2"
+			self.x11_layout = "br"
+		elif keymap == "br-abnt" :
+			self.x11_model = "abnt"
+			self.x11_layout = "br"
+		elif keymap == "fr-latin9" :
+			self.x11_model = "pc105"
+			self.x11_layout = "fr"
+		elif keymap == "us-acentos" :
+			self.x11_model = "pc105"
+			self.x11_layout = "us_intl"
+		elif keymap == "sv-latin1" :
+			self.x11_model = "pc105"
+			self.x11_layout = "se"
+		elif keymap == "us" :
+			self.x11_model = "pc104"
+			self.x11_layout = "us"
+		elif keymap == "dvorak" :
+			self.x11_model = "pc105"
+			self.x11_layout = "dvorak"
+
+	def __getkbmap(self):
+		cmd = "setxkbmap -model {0} -layout {1}".format(self.x11_model, self.x11_layout)
+		if self.x11_variant:
+			cmd += " -variant {0}".format(self.x11_variant)
+		return cmd
+
+	def write(self, xinitrc):
+		oldFile = open(xinitrc)
+		newFile = open(xinitrc + ".new", "w")
+		newFile.write(self.__getkbmap() + "\n")
+		for line in oldFile.readlines() :
+			newFile.write(line)
+		oldFile.close()
+		newFile.close()
+		os.unlink(xinitrc)
+		os.rename(xinitrc+".new", xinitrc)
+
+	def test(self):
+		if subprocess.call(self.__getkbmap().split()) != 0:
+			print("Error evaluating '{0}', please check.".format(cmd))
 
 
-XkbModel, XkbLayout, XkbVariant = getKeyboardSettings()
-kbd_settings = "-model %s -layout %s" %(XkbModel, XkbLayout)
-if XkbVariant != "basic":
-	kbd_settings += " -variant %s" %XkbVariant
+class XKB:
+	def __init__(self):
+		self.rulesfile = "/usr/share/X11/xkb/rules/base.xml"
+		self.layouts = {}
 
-oldFile = open(xinitrc)
-newFile = open(xinitrc + ".new", "w")
-newFile.write("setxkbmap %s\n" %kbd_settings)
-for line in oldFile.readlines() :
-	newFile.write(line)
-oldFile.close()
-newFile.close()
-os.unlink(xinitrc)
-os.rename(xinitrc+".new", xinitrc)
+	def parseRules(self):
+		doc = libxml2.parseFile(self.rulesfile)
+		ctxt = doc.xpathNewContext()
+		layouts = ctxt.xpathEval("/xkbConfigRegistry/layoutList/layout/configItem/name")
+		self.layouts = dict((x.content, x) for x in layouts)
+		for layout in self.layouts.keys():
+			configitem = self.layouts[layout].get_parent()
+			variants = configitem.xpathEval("../variantList/variant/configItem/name")
+			self.layouts[layout] = [x.content for x in variants]
+		return self.layouts
+
+	def x11Layout(self, keymap):
+		if self.layouts.has_key(keymap):
+			return keymap
+		keymap_two = "-".join(keymap.split("-")[0:2])
+		if self.layouts.has_key(keymap_two):
+			return keymap_two
+		keymap_one = keymap.split("-")[0]
+		if self.layouts.has_key(keymap_one):
+			return keymap_one
+		return None
+
+	def x11Variant(self, keymap, layout):
+		if layout is None:
+			return None
+		keymap = keymap[len(layout):].strip("-")
+		for variant in self.layouts[layout]:
+			if keymap in self.layouts[layout]:
+				return keymap
+			keymap_two = "-".join(keymap.split("-")[-2:])
+			if keymap_two in self.layouts[layout]:
+				return keymap_two
+			keymap_one = keymap.split("-")[-1]
+			if keymap_one in self.layouts[layout]:
+				return keymap_one
+		return None
+
+
+def main():
+	if len(sys.argv) != 2:
+		print("Syntax: {0} <KeymapLayout>".format(sys.argv[0]))
+		sys.exit(1)
+
+	xinitrc = os.getenv("HOME") + "/.xinitrc"
+	if not os.path.exists(xinitrc) :
+		print("Error: {0} does not exist.".format(xinitrc))
+		sys.exit(1)
+
+	rules = XKB()
+	rules.parseRules()
+	keymap = sys.argv[1]
+
+	x11_layout = rules.x11Layout(keymap)
+	x11_variant = rules.x11Variant(keymap, x11_layout)
+	settings = KeyboardSettings(keymap, x11_layout, x11_variant)
+	settings.write(xinitrc)
+
+
+def main_debug_all():
+	loadkeys_keymaps = '''
+	dvorak.map
+	azerty.map
+	be-latin1.map
+	fr-latin1.map
+	fr-latin9.map
+	fr-pc.map
+	fr.map
+	wangbe.map
+	wangbe2.map
+	ANSI-dvorak.map
+	dvorak-l.map
+	dvorak-r.map
+	dvorak.map
+	tr_f-latin5.map
+	trf.map
+	bg-cp1251.map
+	bg-cp855.map
+	bg_bds-cp1251.map
+	bg_bds-utf8.map
+	bg_pho-cp1251.map
+	bg_pho-utf8.map
+	br-abnt.map
+	br-abnt2.map
+	br-latin1-abnt2.map
+	br-latin1-us.map
+	by.map
+	cf.map
+	cz-cp1250.map
+	cz-lat2-prog.map
+	cz-lat2.map
+	cz.map
+	defkeymap.map
+	defkeymap_V1.0.map
+	dk-latin1.map
+	dk.map
+	emacs.map
+	emacs2.map
+	es-cp850.map
+	es.map
+	et-nodeadkeys.map
+	et.map
+	fi-latin1.map
+	fi-latin9.map
+	fi.map
+	gr-pc.map
+	gr.map
+	hu101.map
+	il-heb.map
+	il-phonetic.map
+	il.map
+	is-latin1-us.map
+	is-latin1.map
+	it-ibm.map
+	it.map
+	it2.map
+	jp106.map
+	la-latin1.map
+	lt.baltic.map
+	lt.l4.map
+	lt.map
+	mk-cp1251.map
+	mk-utf.map
+	mk.map
+	mk0.map
+	nl.map
+	nl2.map
+	no-latin1.map
+	no.map
+	pc110.map
+	pl.map
+	pl2.map
+	pt-latin1.map
+	pt-latin9.map
+	ro_win.map
+	ru-cp1251.map
+	ru-ms.map
+	ru-yawerty.map
+	ru.map
+	ru1.map
+	ru2.map
+	ru3.map
+	ru4.map
+	ru_win.map
+	se-fi-ir209.map
+	se-fi-lat6.map
+	se-ir209.map
+	se-lat6.map
+	sk-prog-qwerty.map
+	sk-qwerty.map
+	sr-cy.map
+	sv-latin1.map
+	tr_q-latin5.map
+	tralt.map
+	trq.map
+	ua-utf-ws.map
+	ua-utf.map
+	ua-ws.map
+	ua.map
+	uk.map
+	us-acentos.map
+	us.map
+	croat.map
+	cz-us-qwertz.map
+	de-latin1-nodeadkeys.map
+	de-latin1.map
+	de.map
+	de_CH-latin1.map
+	fr_CH-latin1.map
+	fr_CH.map
+	hu.map
+	sg-latin1-lk450.map
+	sg-latin1.map
+	sg.map
+	sk-prog-qwertz.map
+	sk-qwertz.map
+	slovene.map
+	'''
+
+	rules = XKB()
+	rules.parseRules()
+
+	# create translation rules
+	mappings = {}
+	keymaps = [x.strip().split(".")[0] for x in loadkeys_keymaps.strip().split("\n")]
+	for keymap in keymaps:
+		x11_layout = rules.x11Layout(keymap)
+		x11_variant = rules.x11Variant(keymap, x11_layout)
+		mappings[keymap] = KeyboardSettings(keymap, x11_layout, x11_variant)
+		mappings[keymap].test()
+
+if __name__ == "__main__":
+	main()
