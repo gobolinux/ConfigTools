@@ -35,8 +35,9 @@ fi
 GrepReplace -B /System/Kernel/Devices /dev "$GRUB_DIR/grub.cfg"
 
 # Make the OS string prettier
-GrepReplace -B "GoboLinux GNU/Linux" "GoboLinux" "$GRUB_DIR/grub.cfg"
-GrepReplace -B "GoboLinux, with Linux[^\'\(]*" "GoboLinux with VESA framebuffer driver" "$GRUB_DIR/grub.cfg"
+GOBO_VERSION=$(cat /System/Settings/GoboLinuxVersion)
+GrepReplace -B "GoboLinux GNU/Linux" "GoboLinux $GOBO_VERSION" "$GRUB_DIR/grub.cfg"
+GrepReplace -B "GoboLinux, with Linux[^\'\(]*" "GoboLinux $GOBO_VERSION with VESA framebuffer driver" "$GRUB_DIR/grub.cfg"
 GrepReplace -B "driver(" "driver (" "$GRUB_DIR/grub.cfg"
 
 # All options: Make console UTF-8
