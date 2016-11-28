@@ -52,7 +52,7 @@ sed -i -e '0,/default_utf8=1/s@default_utf8=1@default_utf8=1 video=LVDS-1:e vide
 sed -i -e '0,/default_utf8=1/s@default_utf8=1@default_utf8=1 console=/dev/null@' "$GRUB_DIR/grub.cfg"
 
 # Print a fancy message
-sed -i "s,\(.*default_utf8=1.*\),\
+sed -i "s,\(.*/System/Kernel/Boot/kernel.*\),\
 \t\techo	\n\
 \t\techo	\n\
 \t\techo	\n\
