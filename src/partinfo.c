@@ -16,7 +16,7 @@ int main(int argc, char **argv)
 	PedDisk *disk = NULL;
 	char *user_dev;
 	char buf[128];
-	size_t n = sizeof(buf);
+	size_t n = 0, left = sizeof(buf) - 1;
 
 	user_dev = argc > 1 ? argv[1] : NULL;
 
@@ -29,24 +29,20 @@ int main(int argc, char **argv)
 			if (part->num < 0)
 				continue;
 			memset(buf, 0, sizeof(buf));
-			snprintf(buf, sizeof(buf)-1, "%s%d:", dev->path, part->num);
-			n -= strlen(buf) + 1;
+			n += snprintf(buf, left, "%s%d:", dev->path, part->num);
+			left -= n;
 			while ((flag = ped_partition_flag_next(flag))) {
-				if (ped_partition_get_flag(part, flag)) {
-					if (n > 0) {
-						strncat(buf, ped_partition_flag_get_name(flag), n);
-						n = sizeof(buf) - strlen(buf) - 1;
-					}
-					if (n > 0) {
-						strncat(buf, ",", n);
-						n--;
-					}
+				if (ped_partition_get_flag(part, flag) && left > 0) {
+					n += snprintf(&buf[n], left, "%s,", ped_partition_flag_get_name(flag));
+					left -= n;
 				}
 			}
-			if (buf[strlen(buf)-1] == ',')
-				buf[strlen(buf)-1] = '\0';
+			if (buf[n-1] == ',')
+				buf[n-1] = '\0';
 			printf("%s\n", buf);
+			left = sizeof(buf) - 1;
 			flag = 0;
+			n = 0;
 		}
 		part = NULL;
 		ped_disk_destroy(disk);
