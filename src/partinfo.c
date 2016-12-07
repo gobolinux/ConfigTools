@@ -47,5 +47,6 @@ int main(int argc, char **argv)
 		part = NULL;
 		ped_disk_destroy(disk);
 	}
+	ped_device_free_all();
 	return 0;
 }
