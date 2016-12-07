@@ -9,3 +9,4 @@ partinfo: partinfo.c
 
 clean :
 	make -C mouseinfo clean
+	rm -f partinfo
