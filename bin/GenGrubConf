@@ -46,6 +46,9 @@ sed -i 's,\(\tlinux.*Gobo.*\),\1 vt.default_utf8=1,g' "$GRUB_DIR/grub.cfg"
 # All options: Limit number of ramdisks, override Apple HID driver default settings
 sed -i 's,vt.default_utf8=1,vt.default_utf8=1 brd.rd_nr=0 hid_apple.iso_layout=0 hid_apple.fnmode=2,g' "$GRUB_DIR/grub.cfg"
 
+# All options: Wait until the root device becomes available
+sed -i 's,vt.default_utf8=1,vt.default_utf8=1 rootwait,g' "$GRUB_DIR/grub.cfg"
+
 # First option: Enable output on all connected monitors, disable vesafb
 sed -i -e '0,/default_utf8=1/s@default_utf8=1@default_utf8=1 video=LVDS-1:e video=HDMI-1:e video=VGA=1:e video=vesafb:off@' "$GRUB_DIR/grub.cfg"
 
