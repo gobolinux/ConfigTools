@@ -34,6 +34,14 @@ fi
 # The kernel doesn't know about /System/Kernel/Devices
 GrepReplace -B /System/Kernel/Devices /dev "$GRUB_DIR/grub.cfg"
 
+# Use the 'kernel' symlink in the first boot entry
+KERNEL_SYMLINK="/System/Kernel/Boot/kernel"
+KERNEL_TARGET="$(readlink -f $KERNEL_SYMLINK)"
+KERNEL_TARGET_ESCAPED="$(readlink -f $KERNEL_SYMLINK | sed 's,/,\\/,g')"
+KERNEL_RELEASE=$(uname -r)
+sed -i -e "0,$KERNEL_TARGET_ESCAPED/s@$KERNEL_TARGET@$KERNEL_SYMLINK@" "$GRUB_DIR/grub.cfg"
+sed -i -e "0,/Loading Linux $KERNEL_RELEASE/s@Loading Linux $KERNEL_RELEASE@Loading Linux@" "$GRUB_DIR/grub.cfg"
+
 # Make the OS string prettier
 GOBO_VERSION=$(cat /System/Settings/GoboLinuxVersion)
 GrepReplace -B "GoboLinux GNU/Linux" "GoboLinux $GOBO_VERSION" "$GRUB_DIR/grub.cfg"
