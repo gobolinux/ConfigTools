@@ -17,13 +17,16 @@ Import String
 scriptDescription="Automatic fstab generator."
 scriptCredits="(C)2003-2007 by Hisham Muhammad et al. Released under the GNU GPL."
 scriptUsage=""
+Add_Option_Entry "e" "esp" "EFI System Partition."
 Add_Option_Entry "b" "bootdev" "Boot device."
 Add_Option_Entry "s" "swap-file" "A swap file to include in the generated fstab."
 Add_Option_Entry "x" "extra-list" "A list of predefined devices and mount points on the format <device>:<mount point>:[<filesystem>]:[<mount options>]:[<comment>], each entry separated by a comma." ""
 
 Parse_Options "$@"
 
+unset espdev
 unset bootdev
+Is_Entry_Set "esp" && espdev=`Entry "esp"`
 Is_Entry_Set "bootdev" && bootdev=`Entry "bootdev"`
 extralist="$(Entry "extra-list")"
 
@@ -120,6 +123,13 @@ function gen_config() {
          filesystem="auto"
          mountoptions="defaults"
          checks="1 0"
+      elif [ "$partition" = "$espdev" ]
+      then
+         comment="# EFI System Partition."
+         mountpoint="/boot/efi"
+         filesystem="auto"
+         mountoptions="defaults"
+         checks="0 0"
       elif [ "$partition" = "$bootdev" ]
       then
          comment="# Boot partition."
