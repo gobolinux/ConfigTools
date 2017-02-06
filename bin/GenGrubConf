@@ -1,52 +1,109 @@
-#!/bin/bash
+#!/usr/bin/env python
 
-if [ $# != 1 ]
-then
-	echo "Syntax: $0 <grubDir>"
-	exit 1
-fi
+# Routines to generate a GoboLinux-friendly grub.cfg
+# Written by Lucas C. Villa Real <lucasvr@gobolinux.org>
 
-GRUB_DIR="$1"
-mkdir -p "$GRUB_DIR"
-shift
+import subprocess
+import platform
+import sys
+import os
 
-# Create the config file
-unset GRUB_DISABLE_LINUX_UUID
-export GRUB_DISTRIBUTOR="GoboLinux"
-export GRUB_DISABLE_RECOVERY="true"
-export GRUB_CMDLINE_LINUX="vt.default_utf8=1 brd.rd_nr=0 hid_apple.iso_layout=0 hid_apple.fnmode=2 rootwait"
-grub-mkconfig -o "$GRUB_DIR/grub.cfg"
+def is_uefi():
+    return os.path.exists("/sys/firmware/efi/vars")
 
-# The kernel doesn't know about /System/Kernel/Devices
-GrepReplace -B /System/Kernel/Devices /dev "$GRUB_DIR/grub.cfg"
+class GrubConf:
+	def __init__(self):
+		self.gobo_version = open("/System/Settings/GoboLinuxVersion").readline().strip("\n")
+		self.kernel_release = platform.uname()[2]
+		kernel_build_nr = platform.uname()[3].split()[0].strip("#")
+		if kernel_build_nr != "1":
+			self.kernel_release += "-{}".format(kernel_build_nr)
+		self.data = None
 
-# Use the 'kernel' symlink in the first boot entry
-KERNEL_SYMLINK="/System/Kernel/Boot/kernel"
-KERNEL_TARGET="$(readlink -f $KERNEL_SYMLINK)"
-KERNEL_TARGET_ESCAPED="$(readlink -f $KERNEL_SYMLINK | sed 's,/,\\/,g')"
-KERNEL_RELEASE=$(uname -r)
-sed -i -e "0,$KERNEL_TARGET_ESCAPED/s@$KERNEL_TARGET@$KERNEL_SYMLINK@" "$GRUB_DIR/grub.cfg"
-sed -i -e "0,/Loading Linux $KERNEL_RELEASE/s@Loading Linux $KERNEL_RELEASE@Loading Linux@" "$GRUB_DIR/grub.cfg"
+	def makeConfig(self, grubconf):
+		self.grubconf = grubconf
+		if os.path.exists(grubconf):
+			os.unlink(grubconf)
 
-# Make the OS string prettier
-GOBO_VERSION=$(cat /System/Settings/GoboLinuxVersion)
-GrepReplace -B "GoboLinux GNU/Linux" "GoboLinux $GOBO_VERSION" "$GRUB_DIR/grub.cfg"
-GrepReplace -B "GoboLinux, with Linux[^\'\(]*" "GoboLinux $GOBO_VERSION with VESA framebuffer driver" "$GRUB_DIR/grub.cfg"
-GrepReplace -B "driver(" "driver (" "$GRUB_DIR/grub.cfg"
+		cmd_env = os.environ.copy()
+		cmd_env["GRUB_DISABLE_LINUX_UUID"] = ""
+		cmd_env["GRUB_DISTRIBUTOR"] = "GoboLinux"
+		cmd_env["GRUB_DISABLE_RECOVERY"] = "true"
+		cmd_env["GRUB_CMDLINE_LINUX"] = "vt.default_utf8=1 brd.rd_nr=0 hid_apple.iso_layout=0 hid_apple.fnmode=2 video=LVDS-1:e video=HDMI-1:e video=VGA=1:e rootwait"
+		subprocess.Popen(["grub-mkconfig", "-o", self.grubconf], env=cmd_env).wait()
 
-# First option: Enable output on all connected monitors, disable vesafb
-sed -i -e '0,/default_utf8=1/s@default_utf8=1@default_utf8=1 video=LVDS-1:e video=HDMI-1:e video=VGA=1:e video=vesafb:off@' "$GRUB_DIR/grub.cfg"
+		if not is_uefi():
+			subprocess.Popen(["grub-editenv", "-", "set", "feature_default_font_path=n"]).wait()
 
-# First option: Quiet output
-sed -i -e '0,/default_utf8=1/s@default_utf8=1@default_utf8=1 console=/dev/null@' "$GRUB_DIR/grub.cfg"
+		self.data = open(self.grubconf).read()
+		self.__replaceSystemKernelDevices()
+		self.__replaceSymlinkTarget()
+		self.__updateKernelMessage()
+		self.__updateMenuEntryLabels()
+		self.__makeVesaEntries()
+		self.__uuid2partuuid()
 
-# Use the PARTUUID idiom rather than UUID
-blkid -s UUID | while read line
-do
-   THIS_DEV=$(echo "$line" | cut -d: -f1)
-   THIS_UUID=$(blkid -s UUID -o value $THIS_DEV)
-   THIS_PARTUUID=$(blkid -s PARTUUID -o value $THIS_DEV)
-   if [ "$THIS_PARTUUID" ]
-   then sed -i "s,root=UUID=$THIS_UUID,root=PARTUUID=$THIS_PARTUUID,g" "$GRUB_DIR/grub.cfg"
-   fi
-done
+		f = open(grubconf, "w")
+		f.write(self.data)
+		f.close()
+
+	def __replaceSystemKernelDevices(self):
+		self.data = self.data.replace("/System/Kernel/Devices", "/dev")
+
+	def __replaceSymlinkTarget(self):
+		# Use the 'kernel' symlink in the first boot entry
+		symlink = "/System/Kernel/Boot/kernel"
+		symlink_target = os.path.realpath(symlink)
+		self.data = self.data.replace(symlink_target, symlink, 1)
+
+	def __updateKernelMessage(self):
+		# Remove kernel version from first boot entry
+		str_from = "Loading Linux {}".format(self.kernel_release)
+		str_to = "Loading Linux"
+		self.data = self.data.replace(str_from, str_to, 1)
+
+	def __updateMenuEntryLabels(self):
+		# Make the OS string prettier
+		self.data = self.data.replace("GoboLinux GNU/Linux", "GoboLinux {}".format(self.gobo_version))
+		self.data = self.data.replace("driver(", "driver (")
+
+	def __makeVesaEntries(self):
+		# Make second GoboLinux label include the VESA framebuffer driver
+		data, update_label, update_vesa = "", True, True
+		for line in self.data.split("\n"):
+			if line.find("/System/Kernel/Boot/") >= 0 and update_vesa:
+				line += "video=vesafb:off console=/dev/null"
+				update_vesa = False
+			if line.find("GoboLinux {}, with Linux {}".format(self.gobo_version, self.kernel_release)) >= 0 and update_label:
+				str_from = "with Linux {}".format(self.kernel_release)
+				str_to = "with Linux {} (VESAFB driver)".format(self.kernel_release)
+				line = line.replace(str_from, str_to)
+				update_label = False
+			data += line + "\n"
+		self.data = data
+
+	def __uuid2partuuid(self):
+		# Use the PARTUUID idiom rather than UUID
+		p = subprocess.Popen(["blkid", "-s", "UUID"], stdout=subprocess.PIPE)
+		for line in p.stdout.readlines():
+			this_dev = line.split(":")[0]
+			this_uuid = subprocess.check_output(["blkid", "-s", "UUID", "-o", "value", this_dev]).strip("\n")
+			this_partuuid = subprocess.check_output(["blkid", "-s", "PARTUUID", "-o", "value", this_dev]).strip("\n")
+			if len(this_partuuid):
+				self.data = self.data.replace("root=UUID={}".format(this_uuid), "root=PARTUUID={}".format(this_partuuid))
+
+def main():
+	if len(sys.argv) != 2:
+		print("Syntax: {} <grubDir>".format(sys.argv[0]))
+		sys.exit(1)
+
+	grubdir = sys.argv[1]
+	if not os.path.exists(grubdir):
+		os.makedirs(grubdir)
+	grubconf = GrubConf()
+	grubconf.makeConfig(grubdir + "/grub.cfg")
+
+if __name__ == "__main__":
+	main()
+
+# vim: set noexpandtab tabstop=4 shiftwidth=4 autoindent smartindent:
