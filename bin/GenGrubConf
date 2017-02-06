@@ -11,6 +11,7 @@ mkdir -p "$GRUB_DIR"
 shift
 
 # Create the config file
+unset GRUB_DISABLE_LINUX_UUID
 export GRUB_DISTRIBUTOR="GoboLinux"
 export GRUB_DISABLE_RECOVERY="true"
 export GRUB_CMDLINE_LINUX="vt.default_utf8=1 brd.rd_nr=0 hid_apple.iso_layout=0 hid_apple.fnmode=2 rootwait"
