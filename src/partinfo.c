@@ -6,6 +6,7 @@
  * Released under the GNU GPL version 2 or above.
  */
 #include <stdio.h>
+#include <ctype.h>
 #include <parted/parted.h>
 
 typedef enum {
@@ -105,7 +106,14 @@ int main(int argc, char **argv)
 			memset(buf, 0, sizeof(buf));
 			size_t n = 0, left = sizeof(buf) - 1;
 
-			n += snprintf(buf, left, "%s%d:", dev->path, part->num);
+			int pathlen = strlen(dev->path);
+			if (pathlen > 0 && isdigit(dev->path[pathlen-1])) {
+				/* format is something like /dev/nvme0n1p1 */
+				n += snprintf(buf, left, "%sp%d:", dev->path, part->num);
+			} else {
+				/* format is something like /dev/sda1 */
+				n += snprintf(buf, left, "%s%d:", dev->path, part->num);
+			}
 			left -= n;
 
 			if (op == OP_FLAGS)
