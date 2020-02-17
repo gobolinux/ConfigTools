@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 import os
 import sys
@@ -15,7 +15,7 @@ class DeviceHandler :
 		# way as the BIOS.
 		# Here, we assume that 'partition' comes in the form of 'sdXN' or 'hdXN'.
 		if len(partition) < 3 :
-			print >> sys.stderr, "Warning: partition name is too small (%s)" %partition
+			print("Warning: partition name is too small (%s)" %partition, file=sys.stderr)
 			return 0, 1
 		disk = ord(partition[2]) - ord('a')
 		partition = int(partition[3:])
@@ -130,10 +130,10 @@ class ExtLinuxConf :
 
 if __name__ == '__main__' :
 	if len(sys.argv) < 3 :
-		print 'Usage: %s <bootloaderTarget> <targetPartition>'%sys.argv[0]
-		print 'Example: %s hda hda1'%sys.argv[0]
+		print('Usage: %s <bootloaderTarget> <targetPartition>'%sys.argv[0])
+		print('Example: %s hda hda1'%sys.argv[0])
 	else :
 		bootloaderTarget = sys.argv[1]
 		targetPartition = sys.argv[2]
 		cfg = ExtLinuxConf(bootloaderTarget, targetPartition)
-		print cfg.generate()
+		print(cfg.generate())

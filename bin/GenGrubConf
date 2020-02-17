@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Routines to generate a GoboLinux-friendly grub.cfg
 # Written by Lucas C. Villa Real <lucasvr@gobolinux.org>
@@ -86,9 +86,10 @@ class GrubConf:
 		# Use the PARTUUID idiom rather than UUID
 		p = subprocess.Popen(["blkid", "-s", "UUID"], stdout=subprocess.PIPE)
 		for line in p.stdout.readlines():
+			line = line.decode("utf-8")
 			this_dev = line.split(":")[0]
-			this_uuid = subprocess.check_output(["blkid", "-s", "UUID", "-o", "value", this_dev]).strip("\n")
-			this_partuuid = subprocess.check_output(["blkid", "-s", "PARTUUID", "-o", "value", this_dev]).strip("\n")
+			this_uuid = subprocess.check_output(["blkid", "-s", "UUID", "-o", "value", this_dev]).decode("utf-8").strip("\n")
+			this_partuuid = subprocess.check_output(["blkid", "-s", "PARTUUID", "-o", "value", this_dev]).decode("utf-8").strip("\n")
 			if len(this_partuuid):
 				self.data = self.data.replace("root=UUID={}".format(this_uuid), "root=PARTUUID={}".format(this_partuuid))
 				self.data = self.data.replace("root={}".format(this_dev), "root=PARTUUID={}".format(this_partuuid))

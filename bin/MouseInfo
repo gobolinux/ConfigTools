@@ -1,4 +1,4 @@
-#!/bin/python
+#!/usr/bin/env python3
 
 # MouseInfo
 # [detsch] - 18/04/20005: adapted from previous scripts
@@ -106,7 +106,7 @@ class Mouse :
                                         inMouseSection = 1
 
 
-                for key in self.mice.keys() :
+                for key in list(self.mice.keys()) :
                         (gpm_protocol, x_protocol, device, emulate3, shortname) = self.mice[key]
                         if shortname == mouseDriver :
                                 if emulate3 :
@@ -172,4 +172,4 @@ if __name__ == '__main__' :
 		mode = sys.argv[1]
 	
 	o = getMouseOptions(mode)
-	print o
+	print(o)

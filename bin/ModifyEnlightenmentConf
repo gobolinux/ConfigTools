@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # Quick and dirty Enlightenment configurator
@@ -7,7 +7,7 @@ import os
 import subprocess
 
 if len(os.sys.argv) != 3 :
-	print "Syntax: %s <KeymapLayout> <Language>" %os.sys.argv[0]
+	print("Syntax: %s <KeymapLayout> <Language>" %os.sys.argv[0])
 	os.sys.exit(1)
 
 KeymapLayout, Language = os.sys.argv[1:3]
@@ -19,11 +19,11 @@ if Language.find(".") < 0 :
 
 e_config = os.getenv("HOME") + "/.e/e/config/standard/e.cfg"
 if not os.path.exists(e_config) :
-	print "Error: %s does not exist." %e_config
+	print("Error: %s does not exist." %e_config)
 	os.sys.exit(1)
 
 if not os.path.exists("/bin/eet") :
-	print "Error: /bin/eet does not exist."
+	print("Error: /bin/eet does not exist.")
 	os.sys.exit(1)
 
 
@@ -82,7 +82,7 @@ if os.path.exists(tempfile) :
 
 subprocess.call(["/bin/eet", "-d", e_config, "config", tempfile])
 if not os.path.exists(tempfile) :
-	print "Error: failed to create " + tempfile
+	print("Error: failed to create " + tempfile)
 	os.sys.exit(1)
 
 skipUntil = ""
@@ -112,7 +112,7 @@ newFile.close()
 os.unlink(e_config)
 subprocess.call(["/bin/eet", "-e", e_config, "config", tempfile + ".new", "1"])
 if not os.path.exists(e_config) :
-	print "Error: failed to create " + e_config
+	print("Error: failed to create " + e_config)
 	os.sys.exit(1)
 
 os.unlink(tempfile + ".new")

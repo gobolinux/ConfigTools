@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # loadkeys to setxkbmap helper
@@ -67,7 +67,7 @@ class KeyboardSettings:
 
 	def test(self):
 		if subprocess.call(self.__getkbmap().split()) != 0:
-			print("Error evaluating '{0}', please check.".format(cmd))
+			print(("Error evaluating '{0}', please check.".format(cmd)))
 
 
 class XKB:
@@ -80,20 +80,20 @@ class XKB:
 		ctxt = doc.xpathNewContext()
 		layouts = ctxt.xpathEval("/xkbConfigRegistry/layoutList/layout/configItem/name")
 		self.layouts = dict((x.content, x) for x in layouts)
-		for layout in self.layouts.keys():
+		for layout in list(self.layouts.keys()):
 			configitem = self.layouts[layout].get_parent()
 			variants = configitem.xpathEval("../variantList/variant/configItem/name")
 			self.layouts[layout] = [x.content for x in variants]
 		return self.layouts
 
 	def x11Layout(self, keymap):
-		if self.layouts.has_key(keymap):
+		if keymap in self.layouts:
 			return keymap
 		keymap_two = "-".join(keymap.split("-")[0:2])
-		if self.layouts.has_key(keymap_two):
+		if keymap_two in self.layouts:
 			return keymap_two
 		keymap_one = keymap.split("-")[0]
-		if self.layouts.has_key(keymap_one):
+		if keymap_one in self.layouts:
 			return keymap_one
 		return None
 
@@ -115,12 +115,12 @@ class XKB:
 
 def main():
 	if len(sys.argv) != 2:
-		print("Syntax: {0} <KeymapLayout>".format(sys.argv[0]))
+		print(("Syntax: {0} <KeymapLayout>".format(sys.argv[0])))
 		sys.exit(1)
 
 	xinitrc = os.getenv("HOME") + "/.xinitrc"
 	if not os.path.exists(xinitrc) :
-		print("Error: {0} does not exist.".format(xinitrc))
+		print(("Error: {0} does not exist.".format(xinitrc)))
 		sys.exit(1)
 
 	rules = XKB()
