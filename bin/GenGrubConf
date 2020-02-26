@@ -9,7 +9,7 @@ import sys
 import os
 
 def is_uefi():
-    return os.path.exists("/sys/firmware/efi/vars")
+    return os.path.exists("/sys/firmware/efi/efivars")
 
 class GrubConf:
 	def __init__(self):
@@ -29,7 +29,7 @@ class GrubConf:
 		cmd_env["GRUB_DISABLE_LINUX_UUID"] = ""
 		cmd_env["GRUB_DISTRIBUTOR"] = "GoboLinux"
 		cmd_env["GRUB_DISABLE_RECOVERY"] = "true"
-		cmd_env["GRUB_CMDLINE_LINUX"] = "vt.default_utf8=1 brd.rd_nr=0 hid_apple.iso_layout=0 hid_apple.fnmode=2 video=LVDS-1:e video=HDMI-1:e video=VGA=1:e rootwait"
+		cmd_env["GRUB_CMDLINE_LINUX"] = "vt.default_utf8=1 brd.rd_nr=0 hid_apple.iso_layout=0 hid_apple.fnmode=2 video=LVDS-1:e video=HDMI-1:e video=VGA=1:e rootwait net.ifnames=0"
 		subprocess.Popen(["grub-mkconfig", "-o", self.grubconf], env=cmd_env).wait()
 
 		if not is_uefi():
