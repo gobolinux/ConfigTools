@@ -32,7 +32,7 @@ class GrubConf:
 		cmd_env["GRUB_CMDLINE_LINUX"] = "vt.default_utf8=1 brd.rd_nr=0 hid_apple.iso_layout=0 hid_apple.fnmode=2 video=LVDS-1:e video=HDMI-1:e video=VGA=1:e rootwait net.ifnames=0"
 		subprocess.Popen(["grub-mkconfig", "-o", self.grubconf], env=cmd_env).wait()
 
-		if not is_uefi():
+		if not is_uefi() and os.path.exists("/System/Kernel/Boot/grub/grubenv"):
 			subprocess.Popen(["grub-editenv", "-", "set", "feature_default_font_path=n"]).wait()
 
 		self.data = open(self.grubconf).read()
