@@ -72,7 +72,7 @@ class GrubConf:
 		data, update_label, update_vesa = "", True, True
 		for line in self.data.split("\n"):
 			if line.find("/System/Kernel/Boot/") >= 0 and update_vesa:
-				line += "video=vesafb:off console=/dev/null"
+				line += "video=vesafb:off"
 				update_vesa = False
 			if line.find("GoboLinux {}, with Linux {}".format(self.gobo_version, self.kernel_release)) >= 0 and update_label:
 				str_from = "with Linux {}".format(self.kernel_release)
