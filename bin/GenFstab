@@ -15,7 +15,7 @@ Import String
 
 #helpOnNoArguments=no
 scriptDescription="Automatic fstab generator."
-scriptCredits="(C)2003-2007 by Hisham Muhammad et al. Released under the GNU GPL."
+scriptCredits="(C)2003-2020 by Hisham Muhammad et al. Released under the GNU GPL."
 scriptUsage=""
 Add_Option_Entry "e" "esp" "EFI System Partition."
 Add_Option_Entry "b" "bootdev" "Boot device."
@@ -70,6 +70,9 @@ echo "none  /dev/pts devpts defaults 0 0"
 echo
 echo "# Shared memory."
 echo "none  /dev/shm tmpfs  defaults 0 0"
+echo
+echo "# EFI variables."
+echo "efivarfs /sys/firmware/efi/efivars efivarfs defaults 0 0"
 echo
 echo "# Bind-mounts."
 echo "/sys  /System/Kernel/Objects none  rbind  0 0"
@@ -126,7 +129,7 @@ function gen_config() {
       elif [ "$partition" = "$espdev" ]
       then
          comment="# EFI System Partition."
-         mountpoint="/boot/efi"
+         mountpoint="/boot"
          filesystem="auto"
          mountoptions="defaults"
          checks="0 0"
