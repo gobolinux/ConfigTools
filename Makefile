@@ -42,8 +42,6 @@ verify:
 dist: all version_check cleanup verify
 	rm -rf $(PACKAGE_ROOT)
 	mkdir -p $(PACKAGE_VDIR)
-	SignProgram $(PROGRAM)
-	cat Resources/FileHash
 	ListProgramFiles $(PROGRAM) | cpio -p $(PACKAGE_VDIR)
 	cd $(PACKAGE_DIR); tar cvp $(PROGRAM) | bzip2 > $(PACKAGE_FILE)
 	rm -rf $(PACKAGE_ROOT)
