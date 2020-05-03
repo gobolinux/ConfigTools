@@ -71,9 +71,12 @@ echo
 echo "# Shared memory."
 echo "none  /dev/shm tmpfs  defaults 0 0"
 echo
-echo "# EFI variables."
-echo "efivarfs /sys/firmware/efi/efivars efivarfs defaults 0 0"
-echo
+if [ -d /sys/firmware/efi/efivars ]
+then
+   echo "# EFI variables."
+   echo "efivarfs /sys/firmware/efi/efivars efivarfs defaults 0 0"
+   echo
+fi
 echo "# Bind-mounts."
 echo "/sys  /System/Kernel/Objects none  rbind  0 0"
 echo "/dev  /System/Kernel/Devices none  rbind  0 0"
