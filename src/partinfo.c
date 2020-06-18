@@ -98,6 +98,8 @@ int main(int argc, char **argv)
 		if (user_dev && strcmp(user_dev, dev->path))
 			continue;
 		disk = ped_disk_new(dev);
+		if (! disk)
+			continue;
 		while ((part = ped_disk_next_partition(disk, part))) {
 			if (part->num < 0)
 				continue;
