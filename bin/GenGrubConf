@@ -29,8 +29,12 @@ class GrubConf:
 		cmd_env["GRUB_DISABLE_LINUX_UUID"] = ""
 		cmd_env["GRUB_DISTRIBUTOR"] = "GoboLinux"
 		cmd_env["GRUB_DISABLE_RECOVERY"] = "true"
-		cmd_env["GRUB_CMDLINE_LINUX"] = "vt.default_utf8=1 brd.rd_nr=0 hid_apple.iso_layout=0 hid_apple.fnmode=2 video=LVDS-1:e video=HDMI-1:e video=VGA=1:e rootwait net.ifnames=0"
-		subprocess.Popen(["grub-mkconfig", "-o", self.grubconf], env=cmd_env).wait()
+		cmdline = cmd_env["GRUB_CMDLINE_LINUX"] if "GRUB_CMDLINE_LINUX" in cmd_env else ""
+		cmd_env["GRUB_CMDLINE_LINUX"] = f"{cmdline} vt.default_utf8=1 brd.rd_nr=0 hid_apple.iso_layout=0 hid_apple.fnmode=2 video=LVDS-1:e video=HDMI-1:e video=VGA=1:e rootwait net.ifnames=0"
+		res = subprocess.run(["grub-mkconfig", "-o", self.grubconf], env=cmd_env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+		if res.returncode != 0:
+			print(res.stdout.decode('utf-8'))
+			return 1
 
 		if not is_uefi() and os.path.exists("/System/Kernel/Boot/grub/grubenv"):
 			subprocess.Popen(["grub-editenv", "-", "set", "feature_default_font_path=n"]).wait()
@@ -46,6 +50,7 @@ class GrubConf:
 		f = open(grubconf, "w")
 		f.write(self.data)
 		f.close()
+		return 0
 
 	def __replaceSystemKernelDevices(self):
 		self.data = self.data.replace("/System/Kernel/Devices", "/dev")
@@ -103,7 +108,8 @@ def main():
 	if not os.path.exists(grubdir):
 		os.makedirs(grubdir)
 	grubconf = GrubConf()
-	grubconf.makeConfig(grubdir + "/grub.cfg")
+	res = grubconf.makeConfig(grubdir + "/grub.cfg")
+	sys.exit(res)
 
 if __name__ == "__main__":
 	main()
