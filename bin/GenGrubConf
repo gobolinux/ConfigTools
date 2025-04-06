@@ -32,8 +32,8 @@ class GrubConf:
 		cmdline = cmd_env["GRUB_CMDLINE_LINUX"] if "GRUB_CMDLINE_LINUX" in cmd_env else ""
 		cmd_env["GRUB_CMDLINE_LINUX"] = f"{cmdline} vt.default_utf8=1 brd.rd_nr=0 hid_apple.iso_layout=0 hid_apple.fnmode=2 video=LVDS-1:e video=HDMI-1:e video=VGA=1:e rootwait net.ifnames=0"
 		res = subprocess.run(["grub-mkconfig", "-o", self.grubconf], env=cmd_env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+		print(res.stdout.decode('utf-8'))
 		if res.returncode != 0:
-			print(res.stdout.decode('utf-8'))
 			return 1
 
 		if not is_uefi() and os.path.exists("/System/Kernel/Boot/grub/grubenv"):
